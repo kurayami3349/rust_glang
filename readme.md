@@ -13,5 +13,6 @@ https://docs.qq.com/sheet/DTU9ieFhkYU1BVmN1?tab=urh0bh
 ```
 python test_rs.py <case_file> 
 ```
+或者运行`run_test_rs.sh`，**需要自行设置case_file**
 
 
