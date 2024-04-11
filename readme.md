@@ -16,3 +16,5 @@ python test_rs.py <case_file>
 或者运行`run_test_rs.sh`，**需要自行设置case_file**
 
 
+主要编写文件：
+[rust_parser.py](src/lian/lang/parser/rust_parser.py)
