@@ -125,7 +125,12 @@ class Parser(common_parser.Parser):
         return 
     # unary
     def unary_expression(self, node, statements):
-        return 
+        shadow_expr = node.named_children[0]
+
+        tmp_var = self.tmp_variable(statements)
+        statements.append({"assign_stmt": {"target": tmp_var, "operand": shadow_expr}})
+        return tmp_var
+
     # reference
     def reference_expression(self, node, statements):
         return 
@@ -179,7 +184,7 @@ class Parser(common_parser.Parser):
                                            "operand": shadow_left, "operand2": shadow_right}})
         return shadow_left
 
-    # type_cast   
+    # type_cast   不确定正确性
     def type_cast_expression(self, node, statements):
         value = self.find_child_by_field(node, "value")
         type = self.find_child_by_field(node, "type")
@@ -197,7 +202,7 @@ class Parser(common_parser.Parser):
         tmp_var = self.tmp_variable(statements)
         
         statements.append({"assign_stmt": {"data_type": shadow_type, "target": tmp_var, 
-                                           "operator": "as", "operand": shadow_value}})
+                                           "operator": "type_cast", "operand": shadow_value}})
 
         return tmp_var
 
