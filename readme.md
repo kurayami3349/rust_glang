@@ -24,7 +24,7 @@ python test_rs.py <case_file>
 
 ## 第一部分 处理expression
 
-expression类的最终GLang IR 统一格式共用"assign_stmt"
+没有特别分类的expression的最终GLang IR 统一格式共用"assign_stmt"
 ```
 statements.append({"assign_stmt": { "data_type": shadow_type, "target": shadow_target, "operator": shadow_operator,
                                    "operand": shadow1, "operand2": shadow2}})
