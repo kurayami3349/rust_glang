@@ -10,10 +10,42 @@ class Parser(common_parser.Parser):
 
     def is_identifier(self, node):
         return node.type == "identifier"
-        
+
+    def number_literal(self, node, statements, replacement):
+        value = self.read_node_text(node)
+        value = self.common_eval(value)
+        return str(value)
+
+    
+    def string_literal(self, node, statements, replacement):
+        replacement = []
+        for child in node.named_children:
+            self.parse(child, statements, replacement)
+
+        ret = self.read_node_text(node)
+        if replacement:
+            for r in replacement:
+                (expr, value) = r
+                ret = ret.replace(self.read_node_text(expr), value)
+
+        #ret = self.handle_hex_string(ret)
+
+        return self.escape_string(ret)
+    
+    def char_literal(self, node, statements, replacement):
+        value = self.read_node_text(node)
+        return "'%s'" % value
+    
+    def boolean_literal(self, node, statements, replacement):
+        return self.read_node_text(node)
 
     def obtain_literal_handler(self, node):
         LITERAL_MAP = {
+            "string_literal"       : self.string_literal,
+            "char_literal"          : self.char_literal,
+            "boolean_literal"       : self.boolean_literal,
+            "integer_literal"       : self.number_literal,
+            "float_literal"         : self.number_literal,
         }
 
         return LITERAL_MAP.get(node.type, None)
@@ -102,29 +134,72 @@ class Parser(common_parser.Parser):
         return 
     # binary
     def binary_expression(self, node, statements):
-        return 
+        left = self.find_child_by_field(node, "left")
+        right = self.find_child_by_field(node, "right")
+        operator = self.find_child_by_field(node, "operator")
+
+        shadow_operator = self.read_node_text(operator)
+
+        shadow_left = self.parse(left, statements)
+        shadow_right = self.parse(right, statements)
+
+        tmp_var = self.tmp_variable(statements)
+        statements.append({"assign_stmt": {"target": tmp_var, "operator": shadow_operator, "operand": shadow_left,
+                                           "operand2": shadow_right}})
+
+        return tmp_var
     
     # assignment
     def assignment_expression(self, node, statements):
+        # prec.left
         left = self.find_child_by_field(node, "left")
         right = self.find_child_by_field(node, "right")
         
+        shadow_left = self.parse(left, statements)
 
         shadow_right = self.parse(right, statements)
 
-        shadow_left = self.read_node_text(left)
-        
-        statements.append({"assign_stmt": {"target": shadow_left, "operand": shadow_right}})
+
+        statements.append({"assign_stmt": {"target": shadow_left, "operator":"=", "operand": shadow_right}})
         
         return shadow_left 
 
     # compound_assignment_expr
     def compound_assignment_expr(self, node, statements):
-        return 
+        left = self.find_child_by_field(node, "left")
+        right = self.find_child_by_field(node, "right")
+        operator = self.find_child_by_field(node, "operator")
+        shadow_operator = self.read_node_text(operator).replace("=", "")
 
-    # type_cast
+        shadow_left = self.parse(left, statements)
+
+        shadow_right = self.parse(right, statements)
+
+        statements.append({"assign_stmt": {"target": shadow_left, "operator": shadow_operator,
+                                           "operand": shadow_left, "operand2": shadow_right}})
+        return shadow_left
+
+    # type_cast   
     def type_cast_expression(self, node, statements):
-        return 
+        value = self.find_child_by_field(node, "value")
+        type = self.find_child_by_field(node, "type")
+
+        shadow_value = self.parse(value, statements)
+
+        # 先处理这两种类型，type简单为字面值 eg: i32, container(自定义类型名)...
+        if type.type == "primitive_type" or "type_identifier":
+            shadow_type = self.read_node_text(type)
+        
+        else:
+            shadow_type = self.parse(type, statements)
+        
+
+        tmp_var = self.tmp_variable(statements)
+        
+        statements.append({"assign_stmt": {"data_type": shadow_type, "target": tmp_var, 
+                                           "operator": "as", "operand": shadow_value}})
+
+        return tmp_var
 
     # call
     def call_expression(self, node, statements):
@@ -132,11 +207,24 @@ class Parser(common_parser.Parser):
 
     # return
     def return_expression(self, node, statements):
-        return 
+        shadow_target = ""
+        if node.named_child_count > 0:
+            child = node.named_children[0]
+            shadow_name = self.parse(child, statements)
+
+        statements.append({"return_stmt": {"target": shadow_target}})
+        return shadow_target
+         
 
     # yield
     def yield_expression(self, node, statements):
-        return 
+        shadow_target = ""
+        if node.named_child_count > 0:
+            child = node.named_children[0]
+            shadow_name = self.parse(child, statements)
+
+        statements.append({"yield_stmt": {"target": shadow_target}})
+        return shadow_target 
 
     # generic_function
     def generic_function(self, node, statements):
