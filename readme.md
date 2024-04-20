@@ -25,6 +25,39 @@ python test_rs.py <case_file>
 
 ## 第一部分 处理expression
 
+### 进度表
+
+- [x]  range_expression,
+- [x]  unary_expression,
+- [x]  reference_expression,
+- [x]  try_expression,
+- [x]  binary_expression,
+- [x]  assignment_expression,
+- [x]  compound_assignment_expr,
+- [x]  type_cast_expression,
+- [x]  call_expression,
+- [x]  return_expression,
+- [x]  yield_expression,
+- [ ]  generic_function,
+- [x]  await_expression,
+- [x]  field_expression,
+- [ ]  array_expression, 
+- [ ]  tuple_expression,
+- [ ]  unit_expression,
+- [ ]  break_expression,
+- [ ]  continue_expression,
+- [ ]  index_expression,
+- [ ]  closure_expression,
+- [ ]  parenthesized_expression,
+- [ ]  struct_expression,
+- [ ]  if_expression,
+- [ ]  match_expression,
+- [ ]  while_expression,
+- [ ]  loop_expression,
+- [ ]  for_expression,
+
+
+
 没有特别分类的expression的最终GLang IR 统一格式共用"assign_stmt"
 ```
 statements.append({"assign_stmt": { "data_type": shadow_type, "target": shadow_target, "operator": shadow_operator,
