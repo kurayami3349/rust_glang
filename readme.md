@@ -19,8 +19,9 @@ python test_rs.py <case_file>
 主要编写文件：
 [rust_parser.py](src/lian/lang/parser/rust_parser.py)
 参考文件:
-- [java_parser.py](src/lian/lang/parser/java_parser.py)
-- [rust_grammar.js](rust_grammar.js)
+- [java_parser.py](src/lian/lang/parser/java_parser.py) 可以借鉴java的解析方法；
+- [rust_grammar.js](rust_grammar.js) 可以查看相应的grammer；
+- [node-types.json](node-types.json) 可以查看node的结构；
 
 ## 第一部分 处理expression
 
