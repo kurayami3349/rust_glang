@@ -122,10 +122,30 @@ class Parser(common_parser.Parser):
         return EXPRESSION_HANDLER_MAP.get(node.type, None)
     # range
     def range_expression(self, node, statements):
-        return 
+        shadow_start, shadow_end = "", ""
+
+        if node.named_child_count > 0:
+            if node.named_child_count == 1:
+                expr = node.named_children[0]
+                shadow_node = self.read_node_text(node)
+                if shadow_node[0] = '.':
+                    shadow_end = self.parse(expr, statements)
+                elif shadow_node[-1] = '.':
+                    shadow_start = self.parse(expr, statements)
+                   
+            else: # node.named_child_count > 1
+                start_expr, end_expr = node.named_children[0], node.named_children[-1]
+                shadow_start, shadow_end = self.parse(start_expr, statements), self.parse(end_expr, statements)        
+            
+        tmp_var = self.tmp_variable(statements)
+        # 格式未确定
+        statements.append({"range": {"target": tmp_var, "start": shadow_start, "end": shadow_end}})
+        return tmp_var
+
     # unary
     def unary_expression(self, node, statements):
-        shadow_expr = node.named_children[0]
+        expr = node.named_children[0]
+        shadow_expr = self.parse(expr, statements)
 
         tmp_var = self.tmp_variable(statements)
         statements.append({"assign_stmt": {"target": tmp_var, "operand": shadow_expr}})
@@ -133,10 +153,26 @@ class Parser(common_parser.Parser):
 
     # reference
     def reference_expression(self, node, statements):
-        return 
+        value = self.find_child_by_field(node,"value")
+        shadow_value = self.parse(value, statements)
+    
+        if node.named_child_count > 0:
+            specifier = node.named_children[0]
+            tmp_var = self.tmp_variable(statements)
+            statements.append({"assign_stmt": {"target": tmp_var, "specifier":self.read_node_text(specifier), 
+                                               "operator":"ref", "operand": shadow_value}})
+            return tmp_var
+            
+        tmp_var = self.tmp_variable(statements)
+        statements.append({"assign_stmt": {"target": tmp_var, "operator":"ref", "operand": shadow_value}})
+        return tmp_var
     # try
     def try_expression(self, node, statements):
-        return 
+        expr = node.named_children[0]
+        shadow_expr = self.parse(expr, statements)
+        tmp_var = self.tmp_variable(statements)
+        statements.append({"assign_stmt": {"target": tmp_var, "operator": "try", "operand": shadow_expr}})
+        return tmp_var 
     # binary
     def binary_expression(self, node, statements):
         left = self.find_child_by_field(node, "left")
@@ -165,7 +201,7 @@ class Parser(common_parser.Parser):
         shadow_right = self.parse(right, statements)
 
 
-        statements.append({"assign_stmt": {"target": shadow_left, "operator":"=", "operand": shadow_right}})
+        statements.append({"assign_stmt": {"target": shadow_left, "operator": "=", "operand": shadow_right}})
         
         return shadow_left 
 
@@ -208,7 +244,25 @@ class Parser(common_parser.Parser):
 
     # call
     def call_expression(self, node, statements):
-        return 
+        function = self.find_child_by_field(node,"function")
+        shadow_func = self.parse(function, statements)
+
+        args = self.find_child_by_field(node,"arguments")
+        args_list = []
+
+        if args.named_child_count > 0:
+            for child in args.named_children:
+                #if self.is_comment(child):
+                #    continue
+
+                shadow_variable = self.parse(child, statements)
+                if shadow_variable:
+                    args_list.append(shadow_variable)
+
+        tmp_return = self.tmp_variable(statements)
+        statements.append({"call_stmt": {"target": tmp_return, "name": shadow_func, "args": args_list}})
+        # 返回什么？？？
+        return tmp_return #self.global_return()
 
     # return
     def return_expression(self, node, statements):
@@ -237,11 +291,29 @@ class Parser(common_parser.Parser):
 
     # await
     def await_expression(self, node, statements):
-        return 
+        expr = node.named_children[0]
+        shadow_expr = self.parse(expr, statements)
+
+        tmp_var = self.tmp_variable(statements)
+        statements.append({"assign_stmt": {"target": tmp_var, "operator": "await", "operand": shadow_expr}})
+        return tmp_var
 
     # field
     def field_expression(self, node, statements):
-        return 
+        value = self.find_child_by_field(node, "value")
+        shadow_value = self.parse(value, statements)
+
+        field = self.find_child_by_field(node, "field")
+        if self.is_literal(field):  # 类似数组的index
+            shadow_index = self.read_node_text(field)
+            tmp_var = self.tmp_variable(statements)
+            statements.append("array_read": {"target": tmp_var, "array": shadow_value, "index": shadow_index})
+        else:
+            shadow_field = self.read_node_text(field)
+            tmp_var = self.tmp_variable(statements)
+            statements.append({"field_read": {"target":tmp_var, "receiver_object": shadow_value, "field": shadow_field}})
+
+        return tmp_var
 
     # array
     def array_expression(self, node, statements):
