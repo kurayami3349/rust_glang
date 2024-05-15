@@ -49,20 +49,37 @@ python test_rs.py <case_file>
 - [ ]  index_expression,
 - [ ]  closure_expression,
 - [ ]  parenthesized_expression,
+## 第二部分 处理statement（狭义）
 - [ ]  struct_expression,
 - [ ]  if_expression,
 - [ ]  match_expression,
 - [ ]  while_expression,
 - [ ]  loop_expression,
 - [ ]  for_expression,
+- [ ]  use_declaration
+
+## 第三部分 处理declaration
+- [ ] macro_definition
+- [ ] associated_type
+- [ ] attribute_item
+- [ ] const_item
+- [ ] inner_attribute_item
+- [ ] enum_item
+- [ ] function_item
+- [ ] function_signature_item
+- [ ] let_declaration
+- [ ] impl_item
+- [ ] mod_item
+- [ ] foreign_mod_item
+- [ ] type_item
+- [ ] struct_item
+- [ ] static_item
+- [ ] trait_item
+- [ ] union_item
 
 
 
-没有特别分类的expression的最终GLang IR 统一格式共用"assign_stmt"
-```
-statements.append({"assign_stmt": { "data_type": shadow_type, "target": shadow_target, "operator": shadow_operator,
-                                   "operand": shadow1, "operand2": shadow2}})
-```
+举例GLang IR：
 assign_stmt: `data_type`  `target`  `operand` `operator` `operand2`
 
 用于说明赋值语句，格式为target = <operand> <operator> <operand2>
